@@ -38,22 +38,22 @@ struct FuseBNIntoConv final : public OptimizePass {
   }
 
   void replace_inputs(Tensor& W, Tensor& b, Node* conv, Graph& graph) {
-    Value* new_W_value = graph.addInitializerAndInput(W);
     Value* old_W_value = conv->inputs()[1];
+    Value* new_W_value = graph.addInitializerAndInput(W, old_W_value.name() + "_bn_fused");
     conv->replaceInput(1, new_W_value);
     if (old_W_value->uses().size() == 0) {
       graph.eraseInitializerAndInput(old_W_value);
     }
 
     if (conv->inputs().size() == 3) {
-      Value* new_b_value = graph.addInitializerAndInput(b);
       Value* old_b_value = conv->inputs()[2];
+      Value* new_b_value = graph.addInitializerAndInput(b, old_b_value.name() + "_bn_fused");
       conv->replaceInput(2, new_b_value);
       if (old_b_value->uses().size() == 0) {
         graph.eraseInitializerAndInput(old_b_value);
       }
     } else {
-      Value* new_b_value = graph.addInitializerAndInput(b);
+      Value* new_b_value = graph.addInitializerAndInput(b, conv.name() + "_b_bn_fused");
       conv->addInput(new_b_value);
     }
   }
