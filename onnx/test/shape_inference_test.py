@@ -968,6 +968,20 @@ class TestShapeInference(unittest.TestCase):
             [])
         self._assert_inferred(graph, [make_tensor_value_info("Y", TensorProto.FLOAT, (5, 3, 3, 3))])
 
+    def test_maxpool_with_floor_mode(self):  # type: () -> None
+        graph = self._make_graph(
+            [("X", TensorProto.FLOAT, (32, 288, 35, 35))],
+            [make_node("MaxPool", ["X"], ["Y"], kernel_shape=[2, 2], strides=[2, 2], ceil_mode=False)],
+            [])
+        self._assert_inferred(graph, [make_tensor_value_info("Y", TensorProto.FLOAT, (32, 288, 17, 17))])
+
+    def test_maxpool_with_ceil_mode(self):  # type: () -> None
+        graph = self._make_graph(
+            [("X", TensorProto.FLOAT, (32, 288, 35, 35))],
+            [make_node("MaxPool", ["X"], ["Y"], kernel_shape=[2, 2], strides=[2, 2], ceil_mode=True)],
+            [])
+        self._assert_inferred(graph, [make_tensor_value_info("Y", TensorProto.FLOAT, (32, 288, 18, 18))])
+
     def test_maxpool_ceil(self):  # type: () -> None
         graph = self._make_graph(
             [("X", TensorProto.FLOAT, (1, 1, 4, 4))],
@@ -1685,6 +1699,14 @@ class TestShapeInference(unittest.TestCase):
             [make_node('DequantizeLinear', ['x', 'x_scale', 'x_zero_point'], ['y'])],
             [])
         self._assert_inferred(graph, [make_tensor_value_info('y', TensorProto.FLOAT, (30, 4, 5))])
+
+    def test_reversesequence(self):  # type: () -> None
+        graph = self._make_graph(
+            [('x', TensorProto.FLOAT, (4, 5, 6)),
+             ('sequence_lens', TensorProto.INT64, (5,))],
+            [make_node('ReverseSequence', ['x', 'sequence_lens'], ['y'])],
+            [])
+        self._assert_inferred(graph, [make_tensor_value_info('y', TensorProto.FLOAT, (4, 5, 6))])
 
 
 if __name__ == '__main__':
